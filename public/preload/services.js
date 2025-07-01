@@ -329,21 +329,4 @@ window.notifyHubAPI = {
     setClipboard: (text) => utools.copyText(text)
 }
 
-// 插件进入事件
-utools.onPluginEnter(({ code, type, payload }) => {
-    console.log('插件进入:', { code, type, payload })
-
-    // 快速发送通知
-    if (code === 'notify_quick' && payload) {
-        const match = payload.match(/^(notify|通知)\s+(.+)$/)
-        if (match) {
-            const content = match[2]
-            // 通知渲染进程处理快速发送
-            window.postMessage({
-                type: 'QUICK_NOTIFY',
-                payload: { content }
-            }, '*')
-        }
-    }
-})
 

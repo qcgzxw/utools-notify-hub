@@ -117,8 +117,25 @@ export default {
 
       // 设置窗口高度
       if (window.notifyHubAPI && window.notifyHubAPI.setHeight) {
-        window.notifyHubAPI.setHeight(600)
+        window.notifyHubAPI.setHeight(800)
       }
+
+      // 监听快速发送通知
+      utools.onPluginEnter(({ code, type, payload }) => {
+        console.log('插件进入:', { code, type, payload })
+
+        // 快速发送通知
+        if (code === 'notify_quick' && payload) {
+          if (payload) {
+            handleSend({
+              title: '',
+              content: payload,
+            }).catch((error) => {
+              console.error('发送失败:', error)
+            })
+          }
+        }
+      })
     })
 
     onUnmounted(() => {

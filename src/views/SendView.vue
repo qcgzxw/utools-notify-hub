@@ -5,7 +5,7 @@
         <div class="card-body">
           <form @submit.prevent="handleSubmit" class="send-form">
             <div class="form-group">
-              <label for="title" class="form-label required">
+              <label for="title" class="form-label">
                 标题
               </label>
               <input
@@ -14,7 +14,6 @@
                   type="text"
                   class="form-control"
                   placeholder="请输入通知标题"
-                  required
                   maxlength="100"
               />
               <div class="form-hint">
@@ -144,7 +143,7 @@ export default defineComponent({
     })
 
     const canSend = computed(() => {
-      return form.value.title.trim() &&
+      return (form.value.title.trim() || form.value.content.trim()) &&
           enabledChannels.value.length > 0 &&
           !sending.value
     })
