@@ -1,0 +1,40 @@
+{
+  "main": "index.html",
+  "logo": "logo.png",
+  "version": "1.0.0",
+  "platform": ["win32", "darwin", "linux"],
+  "development": {
+    "main": "http://localhost:5173"
+  },
+  "preload": "preload/services.js",
+  "pluginName": "NotifyHub",
+  "description": "聚合各种通知渠道，用于uTools与各个平台之间发送通知。统一聚合，灵活高效，适合各种自动化场景。",
+  "author": "NotifyHub Team",
+  "homepage": "https://github.com/notifyhub/utools-plugin",
+  "features": [
+    {
+      "code": "notify",
+      "explain": "发送通知",
+      "cmds": [
+        "notify",
+        "通知",
+        "发送通知",
+        "消息推送",
+        "NotifyHub"
+      ]
+    },
+    {
+      "code": "notify_quick",
+      "explain": "快速发送通知",
+      "cmds": [
+        {
+          "type": "regex",
+          "label": "快速发送通知",
+          "match": "/^(notify|通知)\\s+(.+)$/",
+          "minLength": 5
+        }
+      ]
+    }
+  ]
+}
+
