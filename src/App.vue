@@ -9,8 +9,7 @@
       <Transition name="fade" mode="out-in">
         <SendView
             v-if="currentView === 'send'"
-            key="send"
-            @send="handleSend"
+            :on-send="handleSend"
             :quick-content="quickContent"
         />
         <ConfigView
@@ -57,37 +56,11 @@ export default {
     const handleNavigate = (view) => {
       currentView.value = view
     }
-    const mockAPI = {
-      getConfig: () => Promise.resolve(config.value),
-      sendNotification: (title, content) => {
-        return new Promise((resolve) => {
-          setTimeout(() => {
-            const savedConfig = localStorage.getItem('notify_hub_config')
-            const config = savedConfig ? JSON.parse(savedConfig) : { channels: {} }
-            const results = {}
-
-            if (config.channels.inotify?.enabled) {
-              results.inotify = { success: true, message: '发送成功' }
-            }
-            if (config.channels.bark?.enabled) {
-              results.bark = { success: true, message: '发送成功' }
-            }
-            if (config.channels.notifyme?.enabled) {
-              results.notifyme = { success: true, message: '发送成功' }
-            }
-
-            resolve(results)
-          }, 1500)
-        })
-      }
-    }
 
     // 发送通知处理
     const handleSend = async (data) => {
       try {
-        const api = window.notifyHubAPI || mockAPI
-        const results = await api.sendNotification(data.title, data.content)
-        sendResults.value = results
+        sendResults.value = await window.notifyHubAPI.sendNotification(data.title, data.content)
         showResult.value = true
       } catch (error) {
         console.error('发送失败:', error)

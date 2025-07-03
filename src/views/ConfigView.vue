@@ -8,7 +8,6 @@
             <div class="channel-header">
               <div class="channel-info">
                 <h3>iNotify</h3>
-                <h5><a href="https://github.com/xpnas/inotify" target="_blank">查看文档</a></h5>
                 <p>一个简易消息通知系统，支持企业微信、电报机器人、邮件推送、内置BARK推送、钉钉群机器人、飞书群机器人，类似Server酱，支持私有Docker部署</p>
               </div>
               <label class="switch">
@@ -70,7 +69,6 @@
             <div class="channel-header">
               <div class="channel-info">
                 <h3>Bark</h3>
-                <h5><a href="https://bark.day.app/#/tutorial?id=%E5%8F%91%E9%80%81%E6%8E%A8%E9%80%81" target="_blank">查看文档</a></h5>
                 <p>一款注重隐私、安全可控的自定义通知推送工具。</p>
               </div>
               <label class="switch">
@@ -132,7 +130,6 @@
             <div class="channel-header">
               <div class="channel-info">
                 <h3>NotifyMe</h3>
-                <h5><a href="https://notifyme.521933.xyz/index.html" target="_blank">查看文档</a></h5>
                 <p>NotifyMe 是一个安卓 App，通过此App你可以基于系统级推送通道（ FCM、华为推送、OPPO 推送、魅族推送、极光推送等）和应用级推送通道（极光推送）向你的安卓设备发送通知。</p>
               </div>
               <label class="switch">
@@ -166,6 +163,19 @@
                     placeholder="https://notifyme-server.521933.xyz"
                     @blur="saveConfig"
                 />
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">点击动作类型</label>
+                <select
+                    v-model="config.channels.notifyme.opts.actionType"
+                    class="form-control"
+                    @change="saveConfig"
+                >
+                  <option value="0">默认</option>
+                  <option value="1">URI启动</option>
+                  <option value="4">写入剪切板</option>
+                </select>
               </div>
 
               <div class="form-actions">
@@ -251,9 +261,9 @@ export default defineComponent({
   setup(props, { emit }) {
     const config = ref({
       channels: {
-        inotify: { enabled: false, server: 'https://notify.example.com', id: '' },
         bark: { enabled: false, key: '', server: 'https://api.day.app' },
-        notifyme: { enabled: false, uuid: '', server: 'https://notifyme-server.521933.xyz' }
+        notifyme: { enabled: false, uuid: '', server: 'https://notifyme-server.521933.xyz', opts: { actionType: 0 } },
+        inotify: { enabled: false, server: 'https://notify.example.com', id: '' },
       },
       settings: {
         autoSave: true,
@@ -264,47 +274,15 @@ export default defineComponent({
 
     const saving = ref(false)
     const testing = ref({
-      inotify: false,
       bark: false,
-      notifyme: false
+      notifyme: false,
+      inotify: false,
     })
     const testResults = ref({})
-
-    // 模拟API（用于浏览器环境测试）
-    const mockAPI = {
-      getConfig: () => Promise.resolve(config.value),
-      saveConfig: (newConfig) => {
-        config.value = { ...config.value, ...newConfig }
-        localStorage.setItem('notify_hub_config', JSON.stringify(config.value))
-        return Promise.resolve(true)
-      },
-      testChannel: (channel, channelConfig, title, content) => {
-        return new Promise((resolve) => {
-          setTimeout(() => {
-            if (channel === 'inotify' && channelConfig.domain && channelConfig.id) {
-              resolve({ success: true, message: '连接测试成功' })
-            } else if (channel === 'bark' && channelConfig.key) {
-              resolve({ success: true, message: '连接测试成功' })
-            } else if (channel === 'notifyme' && channelConfig.uuid) {
-              resolve({ success: true, message: '连接测试成功' })
-            } else {
-              resolve({ success: false, message: '配置信息不完整' })
-            }
-          }, 1000)
-        })
-      }
-    }
-
-    // 获取API实例
-    const getAPI = () => {
-      return window.notifyHubAPI || mockAPI
-    }
-
     // 加载配置
     const loadConfig = async () => {
       try {
-        const api = getAPI()
-        const loadedConfig = await api.getConfig()
+        const loadedConfig = await window.notifyHubAPI.getConfig()
         config.value = { ...config.value, ...loadedConfig }
 
         // 从localStorage加载配置（浏览器环境）
@@ -324,24 +302,24 @@ export default defineComponent({
 
       saving.value = true
       try {
-        const api = getAPI()
-        await api.saveConfig(config.value)
+        await window.notifyHubAPI.saveConfig(config.value)
         emit('save', config.value)
       } finally {
         saving.value = false
       }
     }
 
+    const getDefaultConfig = () => {
+      return api.getDefaultConfig()
+    }
+
     // 测试渠道连接
     const testChannel = async (channel) => {
-      const api = getAPI()
-      if (!api) return
-
       testing.value[channel] = true
       testResults.value[channel] = null
 
       try {
-        const result = await api.testChannel(
+        const result = await window.notifyHubAPI.testChannel(
             channel,
             config.value.channels[channel],
             'NotifyHub测试',
@@ -361,18 +339,7 @@ export default defineComponent({
     // 重置配置
     const resetConfig = async () => {
       if (confirm('确定要重置所有配置吗？此操作不可撤销。')) {
-        config.value = {
-          channels: {
-            inotify: { enabled: false, domain: '', id: '' },
-            bark: { enabled: false, key: '', server: 'https://api.day.app' },
-            notifyme: { enabled: false, uuid: '', server: 'https://notifyme-server.521933.xyz' }
-          },
-          settings: {
-            autoSave: true,
-            showNotifications: true,
-            timeout: 10000
-          }
-        }
+        config.value = getDefaultConfig()
         await saveConfig()
         testResults.value = {}
         localStorage.removeItem('notify_hub_config')

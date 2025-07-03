@@ -95,9 +95,10 @@ export default defineComponent({
     quickContent: {
       type: String,
       default: ''
-    }
+    },
+    onSend: { type: Function, required: true },
   },
-  emits: ['send', 'navigate'],
+  emits: ['navigate'],
   setup(props, { emit }) {
     const form = ref({
       title: '',
@@ -106,34 +107,6 @@ export default defineComponent({
 
     const sending = ref(false)
     const config = ref(null)
-
-    // 模拟API（用于浏览器环境测试）
-    const mockAPI = {
-      getConfig: () => {
-        const savedConfig = localStorage.getItem('notify_hub_config')
-        if (savedConfig) {
-          return Promise.resolve(JSON.parse(savedConfig))
-        }
-        return Promise.resolve({
-          channels: {
-            inotify: { enabled: false, domain: '', id: '' },
-            bark: { enabled: false, key: '', server: 'https://api.day.app' },
-            notifyme: { enabled: false, uuid: '', server: 'https://notifyme-server.521933.xyz' }
-          },
-          settings: {
-            autoSave: true,
-            showNotifications: true,
-            timeout: 10000
-          }
-        })
-      },
-    }
-
-    // 获取API实例
-    const getAPI = () => {
-      return window.notifyHubAPI || mockAPI
-    }
-
     // 计算属性
     const enabledChannels = computed(() => {
       if (!config.value) return []
@@ -151,8 +124,7 @@ export default defineComponent({
     // 方法
     const loadConfig = async () => {
       try {
-        const api = getAPI()
-        config.value = await api.getConfig()
+        config.value = await window.notifyHubAPI.getConfig()
       } catch (error) {
         console.error('加载配置失败:', error)
       }
@@ -172,7 +144,8 @@ export default defineComponent({
 
       sending.value = true
       try {
-        emit('send', {
+        // 通过 props 调用父组件的发送函数，并 await
+        await props.onSend({
           title: form.value.title.trim(),
           content: form.value.content.trim()
         })
