@@ -21,7 +21,7 @@ class NotifyMeChannel extends Channel {
 
 
   getOpts(title, content) {
-    const urls = this.extractUrlFromStr(title) || this.extractDomainFromStr(content);
+    const urls = this.extractUrlFromStr(title) || this.extractUrlFromStr(content);
     const domains = this.extractDomainFromStr(title) || this.extractDomainFromStr(content);
     if (this.opts.actionType) {
       this.opts.actionType = parseInt(this.opts.actionType)
